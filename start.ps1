@@ -12,10 +12,5 @@ if (-not (Test-Path -LiteralPath $python)) {
 if ($LASTEXITCODE -ne 0) { throw 'Could not install backend dependencies.' }
 & $python backend/manage_db.py init
 if ($LASTEXITCODE -ne 0) { throw 'Could not initialize the database. Check MySQL and the DB_* settings in .env.' }
-if (-not (Test-Path -LiteralPath 'frontend/node_modules')) {
-    npm --prefix frontend ci
-    if ($LASTEXITCODE -ne 0) { throw 'Could not install frontend dependencies.' }
-}
-npm run build
-if ($LASTEXITCODE -ne 0) { throw 'Frontend build failed.' }
+Write-Host 'Starting the API on port 5050. In another terminal, run npm run dev for the frontend on port 5173.'
 & $python backend/app.py

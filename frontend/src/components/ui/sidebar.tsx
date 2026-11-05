@@ -7,7 +7,8 @@ import {
   MotionConfig,
   useReducedMotion,
 } from "motion/react";
-import { IconMenu2, IconX } from "@tabler/icons-react";
+import IconMenu2 from "@tabler/icons-react/dist/esm/icons/IconMenu2.mjs";
+import IconX from "@tabler/icons-react/dist/esm/icons/IconX.mjs";
 
 interface Links {
   label: string;

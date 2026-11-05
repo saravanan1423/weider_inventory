@@ -11,6 +11,17 @@ from database import get_engine
 from manage_db import init_database, server_engine
 
 
+class ApiHostingTests(unittest.TestCase):
+    def test_backend_is_api_only(self):
+        client = app.test_client()
+        response = client.get('/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()['service'], 'Weider ERP API')
+        self.assertIsNone(app.static_folder)
+        self.assertEqual(client.get('/index.html').status_code, 404)
+        self.assertEqual(client.get('/weider-logo.png').status_code, 404)
+
+
 @unittest.skipUnless(os.environ.get('RUN_MYSQL_TESTS') == '1', 'Set RUN_MYSQL_TESTS=1 to run database tests')
 class QuotationTests(unittest.TestCase):
     def setUp(self):

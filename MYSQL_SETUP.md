@@ -16,7 +16,9 @@ Start **MySQL** in XAMPP, then run:
 .\start.ps1
 ```
 
-For manual startup:
+This starts only the backend. Run `npm run dev` in another terminal and open port 5173 for the frontend.
+
+For manual backend startup:
 
 ```powershell
 .venv\Scripts\python -m pip install -r backend/requirements.txt

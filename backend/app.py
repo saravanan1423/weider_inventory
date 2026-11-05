@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request
 from sqlalchemy import func, select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -11,7 +11,7 @@ from config import load_settings
 
 ROOT = Path(__file__).resolve().parent
 (ROOT / 'instance').mkdir(exist_ok=True)
-app = Flask(__name__, static_folder=str(ROOT.parent / 'frontend' / 'dist'), static_url_path='')
+app = Flask(__name__, static_folder=None)
 app.config.update(load_settings())
 
 
@@ -76,14 +76,12 @@ def database_error(error):
 
 @app.get('/')
 def index():
-    return send_from_directory(app.static_folder, 'index.html')
+    return jsonify(service='Weider ERP API', frontend='Run npm run dev separately on port 5173.')
 
 
 @app.get('/<path:path>')
-def assets(path):
-    if path.startswith('api/'):
-        return jsonify(error='Not found.'), 404
-    return send_from_directory(app.static_folder, path)
+def not_found(path):
+    return jsonify(error='Not found.'), 404
 
 
 if __name__ == '__main__':

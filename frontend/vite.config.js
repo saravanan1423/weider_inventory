@@ -13,6 +13,9 @@ export default defineConfig(({ mode }) => {
     }
     return value;
   };
+  const proxy = {
+    "/api": env.API_PROXY_TARGET || `http://127.0.0.1:${port("FLASK_PORT", 5050)}`,
+  };
   return {
     plugins: [tailwindcss()],
     resolve: {
@@ -22,12 +25,13 @@ export default defineConfig(({ mode }) => {
       host: env.FRONTEND_HOST || "0.0.0.0",
       port: port("FRONTEND_PORT", 5173),
       strictPort: true,
-      proxy: {
-        "/api":
-          env.API_PROXY_TARGET ||
-          `http://127.0.0.1:${port("FLASK_PORT", 5050)}`,
-      },
+      proxy,
     },
-    preview: { host: env.FRONTEND_HOST || "0.0.0.0" },
+    preview: {
+      host: env.FRONTEND_HOST || "0.0.0.0",
+      port: port("FRONTEND_PORT", 5173),
+      strictPort: true,
+      proxy,
+    },
   };
 });

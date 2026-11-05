@@ -1,12 +1,10 @@
 "use client";
 import React, { useState } from "react";
 import { Sidebar, SidebarBody, SidebarLink } from "@/components/ui/sidebar";
-import {
-  IconArrowLeft,
-  IconBrandTabler,
-  IconSettings,
-  IconUserBolt,
-} from "@tabler/icons-react";
+import IconArrowLeft from "@tabler/icons-react/dist/esm/icons/IconArrowLeft.mjs";
+import IconBrandTabler from "@tabler/icons-react/dist/esm/icons/IconBrandTabler.mjs";
+import IconSettings from "@tabler/icons-react/dist/esm/icons/IconSettings.mjs";
+import IconUserBolt from "@tabler/icons-react/dist/esm/icons/IconUserBolt.mjs";
 import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 

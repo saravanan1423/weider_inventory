@@ -18,14 +18,14 @@ inventory software/
 │   ├── package.json
 │   └── vite.config.js
 ├── backend/
-│   ├── app.py                # Flask API and frontend hosting
+│   ├── app.py                # Flask API only
 │   ├── database.py           # MySQL connections and schema
 │   ├── pricing.py            # Validation and authoritative totals
 │   ├── instance/             # Local logs and historical backups (not committed)
 │   ├── tests/
 │   └── requirements.txt
 ├── package.json              # Frontend command shortcuts
-└── start.ps1                 # Install, build, and run on Windows
+└── start.ps1                 # Prepare and run the backend on Windows
 ```
 
 ## Run
@@ -36,11 +36,19 @@ Start MySQL in XAMPP first. On a new checkout, copy `.env.example` to `.env`, cr
 .\start.ps1
 ```
 
-Open **http://localhost:5050**.
+This starts only the backend on port 5050. In a second terminal, run:
 
-Other devices on the same Wi-Fi or LAN can use `http://<this-computer-IPv4>:5050`. Use `ipconfig` to find the server computer's IPv4 address. Flask listens on all network interfaces (`0.0.0.0`) on port 5050. Keep the server computer running; its IP address may change when it reconnects to the network.
+```powershell
+# Install once, and again when the lockfile changes:
+npm --prefix frontend ci
+npm run dev
+```
 
-The app uses the Aceternity expanding sidebar. The supplied reference demo is available at `http://localhost:5050/?sidebar-demo` and its dark variant at `http://localhost:5050/?sidebar-demo&theme=dark`. See [SIDEBAR_IMPLEMENTATION.md](SIDEBAR_IMPLEMENTATION.md) for all changes from the supplied source.
+Open **http://localhost:5173**. Keep both terminals running. React edits refresh automatically; no build is needed while developing.
+
+Other devices on the same Wi-Fi or LAN can use `http://<this-computer-IPv4>:5173` when permitted by the firewall. Use `ipconfig` to find the server computer's IPv4 address. Vite forwards `/api` to Flask on port 5050, so the browser uses port 5173 for both UI and API requests.
+
+The app uses the Aceternity expanding sidebar. The supplied reference demo is available at `http://localhost:5173/?sidebar-demo` and its dark variant at `http://localhost:5173/?sidebar-demo&theme=dark`. See [SIDEBAR_IMPLEMENTATION.md](SIDEBAR_IMPLEMENTATION.md) for all changes from the supplied source.
 
 Or set up manually:
 
@@ -51,11 +59,16 @@ python -m venv .venv
 Copy-Item .env.example .env
 .venv\Scripts\python backend/manage_db.py init
 npm --prefix frontend ci
-npm run build
 .venv\Scripts\python backend/app.py
 ```
 
-For frontend development, keep Flask running and run `npm run dev` in another terminal. Open the Vite URL shown in that terminal. Vite proxies `/api` to Flask on port 5050.
+Keep Flask running and run `npm run dev` in another terminal. On Linux, use `.venv/bin/python` instead of `.venv\Scripts\python`.
+
+`npm run build` creates optimized frontend files in `frontend/dist` only when needed. Flask no longer hosts these files. `npm run preview` checks a build on port 5173 with the API proxy enabled; stop the dev server first because both use that port. Vite dev and preview are for development and build verification. Public deployment needs a separate production frontend server that forwards `/api` to Flask/Gunicorn.
+
+Tabler icons are imported individually to avoid processing the whole icon collection. Run `npm run typecheck` separately for TypeScript checks.
+
+After pulling GitHub updates, run `npm --prefix frontend ci` when dependencies change. Restart Flask after backend changes, and Vite after configuration or dependency changes. Ordinary React edits refresh automatically.
 
 ## Verification
 
