@@ -1,0 +1,44 @@
+# JavaScript dependencies and generated builds
+node_modules/
+dist/
+build/
+.vite/
+
+# Python virtual environments and caches
+.venv/
+venv/
+env/
+myenv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+
+# Private settings, runtime data, database backups and logs
+.env
+.env.*
+!.env.example
+/backend/instance/
+*.db
+*.db-shm
+*.db-wal
+*.log
+
+# Test reports and coverage
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+test-results/
+playwright-report/
+
+# Local editor and operating system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
