@@ -18,6 +18,24 @@ export default defineConfig(({ mode }) => {
   };
   return {
     plugins: [tailwindcss()],
+    // Prepare these together so discovering an icon does not invalidate the
+    // dependency URLs that an already-open browser is loading.
+    optimizeDeps: {
+      include: [
+        "react",
+        "react-dom/client",
+        "react/jsx-runtime",
+        "react/jsx-dev-runtime",
+        "lucide-react",
+        "motion/react",
+        "@tabler/icons-react/dist/esm/icons/IconMenu2.mjs",
+        "@tabler/icons-react/dist/esm/icons/IconX.mjs",
+        "@tabler/icons-react/dist/esm/icons/IconArrowLeft.mjs",
+        "@tabler/icons-react/dist/esm/icons/IconBrandTabler.mjs",
+        "@tabler/icons-react/dist/esm/icons/IconSettings.mjs",
+        "@tabler/icons-react/dist/esm/icons/IconUserBolt.mjs",
+      ],
+    },
     resolve: {
       alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
     },
