@@ -62,6 +62,7 @@ export default function QuotationPreview({
   loading = false,
   navigationError = "",
   positionLabel = "",
+  onPrint = () => window.print(),
 }) {
   const rows = [
     ["Basic Total", sum.subtotal, ""],
@@ -116,7 +117,7 @@ export default function QuotationPreview({
             <button
               type="button"
               className="button primary"
-              onClick={() => window.print()}
+              onClick={onPrint}
               disabled={loading}
             >
               <Printer size={16} />

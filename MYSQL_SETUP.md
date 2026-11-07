@@ -29,6 +29,8 @@ For manual backend startup:
 
 `init` creates the configured database and table if they do not exist; it does not clear existing data. `check` verifies connectivity. These are the only database management commands.
 
+Initialization also adds the account, session and quotation approval tables. Create the first administrator with `backend/manage_users.py create-admin --username admin --name "Administrator"`; it prompts for a password. See [ROLE_MANAGEMENT.md](ROLE_MANAGEMENT.md).
+
 ## Environment variables
 
 ```dotenv

@@ -2,6 +2,10 @@
 
 A React and Flask quotation application with a compact light interface, MySQL storage, and printable quotations.
 
+## Accounts and approvals
+
+The workspace requires sign-in. Administrators manage accounts and approve quotations; users can preview and print their own quotations only after approval. Saved edits require approval again. See [ROLE_MANAGEMENT.md](ROLE_MANAGEMENT.md) for first-admin setup, server update commands, permissions, and password recovery.
+
 ## Project structure
 
 ```text
@@ -125,4 +129,4 @@ Discounts apply before tax. The configured business state is Tamil Nadu. For a T
 
 Data is now stored in the MySQL database configured by `DB_NAME`. Historical database backup files remain untouched in `backend/instance`. Back up MySQL regularly with your database administration tools; old local backup files do not include new MySQL quotations.
 
-The application runs as a trusted local workspace without authentication. Configure authentication and a production WSGI server before public deployment.
+Authentication uses database-backed sessions and server-side role checks. Use HTTPS or a trusted VPN for credentials and quotation data, and a production WSGI/frontend server for public deployment.

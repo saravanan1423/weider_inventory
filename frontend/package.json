@@ -8,7 +8,7 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "test": "node --test tests/quotation.test.js && vitest run tests/Select.test.jsx tests/DatePicker.test.jsx tests/Navbar.test.jsx tests/Sidebar.test.tsx tests/SidebarReducedMotion.test.tsx tests/QuotationPreview.test.jsx tests/PreviewNavigation.test.jsx",
+    "test": "node --test tests/quotation.test.js && vitest run tests/Select.test.jsx tests/DatePicker.test.jsx tests/Navbar.test.jsx tests/Sidebar.test.tsx tests/SidebarReducedMotion.test.tsx tests/QuotationPreview.test.jsx tests/PreviewNavigation.test.jsx tests/RoleWorkflow.test.jsx",
     "format": "prettier --write src index.html vite.config.js package.json"
   },
   "dependencies": {

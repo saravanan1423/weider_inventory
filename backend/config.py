@@ -50,4 +50,6 @@ def load_settings(project_root=PROJECT_ROOT, environ=None):
         'HOST': setting('FLASK_HOST', '0.0.0.0'),
         'PORT': port('FLASK_PORT', 5050),
         'DEBUG': debug in ['true', '1', 'yes', 'on'],
+        'AUTH_COOKIE_SECURE': setting('AUTH_COOKIE_SECURE', 'false').lower() in ['true', '1', 'yes', 'on'],
+        'USER_CAN_PRINT_APPROVED': setting('USER_CAN_PRINT_APPROVED', 'true').lower() in ['true', '1', 'yes', 'on'],
     }

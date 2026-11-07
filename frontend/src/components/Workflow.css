@@ -1,0 +1,147 @@
+.auth-screen {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: #f4f6f9;
+  color: #122039;
+}
+.auth-card {
+  width: min(100%, 410px);
+  padding: 32px;
+  background: white;
+  border: 1px solid #d6dee8;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px #1220390a;
+  display: grid;
+  gap: 18px;
+}
+.auth-card img {
+  width: 85px;
+  height: 70px;
+  object-fit: contain;
+}
+.auth-card h1 {
+  font-size: 23px;
+  line-height: 1.3;
+  margin: 0;
+}
+.auth-card p,
+.auth-card small {
+  color: #64748b;
+  margin: 0;
+}
+.auth-card label,
+.account-form > label {
+  display: grid;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+}
+.auth-card input,
+.account-form input:not([type="checkbox"]) {
+  width: 100%;
+  min-height: 38px;
+  border: 1px solid #cbd3de;
+  border-radius: 5px;
+  padding: 8px 10px;
+}
+.auth-card input:focus,
+.account-form input:focus {
+  outline: 2px solid #c3e0f9;
+  outline-offset: 1px;
+}
+.workflow-card {
+  overflow: hidden;
+}
+.workflow-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.workflow-subtext {
+  display: block;
+  color: #64748b;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: 20px;
+  align-items: start;
+}
+.account-form {
+  padding: 22px;
+  display: grid;
+  gap: 16px;
+}
+.account-form h2 {
+  font-size: 18px;
+  margin: 0;
+}
+.account-form > label.checkbox {
+  display: flex;
+  align-items: center;
+}
+.workflow-status {
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 4px;
+  background: #fff4db;
+  color: #835b13;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.workflow-status.approved {
+  background: #e5f4eb;
+  color: #23613d;
+}
+.workflow-banner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  border: 1px solid #d6dee8;
+  background: #f8fafc;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+.workflow-banner p {
+  margin: 0;
+  color: #526176;
+}
+.session-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.session-actions span {
+  color: #526176;
+}
+.notification-count {
+  border-radius: 20px;
+  background: #e5f1fb;
+  color: #0865a0;
+  padding: 1px 7px;
+}
+@media (max-width: 1000px) {
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+  .session-actions span {
+    display: none;
+  }
+}
+@media print {
+  body:not(:has(.preview-modal)) .app {
+    display: none !important;
+  }
+  .workflow-banner,
+  .session-actions {
+    display: none !important;
+  }
+}

@@ -10,6 +10,8 @@ import {
   Truck,
   ChevronLeft,
   ChevronRight,
+  Bell,
+  Users,
 } from "lucide-react";
 import WorkspaceSidebar from "./components/WorkspaceSidebar";
 import Field from "./components/Field";
@@ -20,6 +22,8 @@ import ItemsTable from "./components/ItemsTable";
 import QuotationTerms from "./components/QuotationTerms";
 import QuotationList from "./components/QuotationList";
 import QuotationPreview from "./components/QuotationPreview";
+import ApprovalRequests from "./components/ApprovalRequests";
+import UserManagement from "./components/UserManagement";
 import {
   newQuotation,
   totals,
@@ -28,7 +32,10 @@ import {
 } from "./lib/quotation";
 import { api } from "./lib/api";
 
-export default function App() {
+export default function App({ user, userCanPrintApproved = true, onLogout }) {
+  const admin = user?.role === "admin";
+  const [requests, setRequests] = useState([]);
+  const [dirty, setDirty] = useState(false);
   const [quote, setQuote] = useState(newQuotation);
   const [view, setView] = useState("editor");
   const [quotes, setQuotes] = useState([]);
@@ -53,6 +60,9 @@ export default function App() {
     number: quote.number || nextNumber,
   };
   const sum = totals(current);
+  const canPreview =
+    admin ||
+    (userCanPrintApproved && quote.id && quote.status === "approved" && !dirty);
   const previewCurrent = previewQuote || current;
   const orderedQuotes = [...quotes].sort((a, b) => a.id - b.id);
   const editorIndex = orderedQuotes.findIndex((saved) => saved.id === quote.id);
@@ -62,17 +72,32 @@ export default function App() {
       : orderedQuotes[editorIndex - 1]?.id;
   const nextEditorId =
     editorIndex < 0 ? undefined : orderedQuotes[editorIndex + 1]?.id;
-  const previewIndex = orderedQuotes.findIndex(
+  const previewQuotes = admin
+    ? orderedQuotes
+    : orderedQuotes.filter((q) => q.status === "approved");
+  const previewIndex = previewQuotes.findIndex(
     (saved) => saved.id === previewCurrent.id,
   );
   const previousId =
     previewIndex < 0
-      ? orderedQuotes.at(-1)?.id
-      : orderedQuotes[previewIndex - 1]?.id;
+      ? previewQuotes.at(-1)?.id
+      : previewQuotes[previewIndex - 1]?.id;
   const nextId =
-    previewIndex < 0 ? undefined : orderedQuotes[previewIndex + 1]?.id;
+    previewIndex < 0 ? undefined : previewQuotes[previewIndex + 1]?.id;
 
-  function showPreview() {
+  async function showPreview() {
+    if (!canPreview) return;
+    if (!admin) {
+      try {
+        const approved = await api(`/quotations/${quote.id}/preview`);
+        setPreviewQuote(approved);
+        setPreview(true);
+        setPreviewError("");
+      } catch (e) {
+        setError(e.message);
+      }
+      return;
+    }
     previewRequest.current += 1;
     setPreviewQuote(null);
     setPreviewError("");
@@ -96,7 +121,7 @@ export default function App() {
     }
     setPreviewLoading(true);
     try {
-      const saved = await api(`/quotations/${id}`);
+      const saved = await api(`/quotations/${id}/preview`);
       if (requestId === previewRequest.current) setPreviewQuote(saved);
     } catch (error) {
       if (requestId === previewRequest.current) setPreviewError(error.message);
@@ -124,13 +149,24 @@ export default function App() {
         }),
       );
       setQuotes(quotationsWithValidity);
+      setQuote((previous) => {
+        const latest = quotationsWithValidity.find((q) => q.id === previous.id);
+        return latest &&
+          latest.revision === previous.revision &&
+          latest.status !== previous.status
+          ? { ...previous, status: latest.status }
+          : previous;
+      });
       setNextNumber(next.number);
+      if (admin) setRequests((await api("/approval-requests")) || []);
     } catch (error) {
       setError(error.message);
     }
   }
   useEffect(() => {
     load();
+    const timer = setInterval(load, 30000);
+    return () => clearInterval(timer);
   }, []);
   useEffect(() => {
     if (!notice) return;
@@ -145,23 +181,28 @@ export default function App() {
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
   }, [preview]);
-  const update = (key, value) =>
+  const update = (key, value) => {
+    setDirty(true);
     setQuote((previous) => updateQuotationField(previous, key, value));
-  const updateItem = (index, key, value) =>
+  };
+  const updateItem = (index, key, value) => {
+    setDirty(true);
     setQuote((previous) => ({
       ...previous,
       items: previous.items.map((item, n) =>
         n === index ? { ...item, [key]: value } : item,
       ),
     }));
+  };
   const newQuote = () => {
     editorRequest.current += 1;
     setQuoteLoading(false);
-    if (quote.id) editorDrafts.current.set(quote.id, { quote, same });
+    if (quote.id) editorDrafts.current.set(quote.id, { quote, same, dirty });
     const draft = quote.id ? editorDrafts.current.get("new") : null;
     if (!quote.id) editorDrafts.current.delete("new");
     setQuote(draft?.quote || newQuotation());
     setSame(draft?.same || false);
+    setDirty(draft?.dirty || false);
     setView("editor");
     setError("");
     load();
@@ -177,9 +218,10 @@ export default function App() {
         body: JSON.stringify(current),
       });
       setQuote(saved);
+      setDirty(false);
       if (!quote.id) editorDrafts.current.delete("new");
-      editorDrafts.current.set(saved.id, { quote: saved, same });
-      setNotice(`${saved.number} saved successfully`);
+      editorDrafts.current.set(saved.id, { quote: saved, same, dirty: false });
+      setNotice(`${saved.number} submitted for approval`);
       await load();
     } catch (error) {
       setError(error.message);
@@ -187,29 +229,80 @@ export default function App() {
       setBusy(false);
     }
   }
-  async function open(id) {
+  async function open(id, force = false) {
     if (!id) return;
-    if (id === quote.id) {
+    if (id === quote.id && dirty && !force) {
       setView("editor");
       return;
     }
     const requestId = ++editorRequest.current;
     setQuoteLoading(true);
     try {
-      const target = editorDrafts.current.get(id) || {
-        quote: await api(`/quotations/${id}`),
-        same: false,
-      };
+      const cached = editorDrafts.current.get(id);
+      const target =
+        !force && cached?.dirty
+          ? cached
+          : {
+              quote: await api(`/quotations/${id}`),
+              same: false,
+              dirty: false,
+            };
       if (requestId !== editorRequest.current) return;
-      editorDrafts.current.set(quote.id || "new", { quote, same });
+      editorDrafts.current.set(quote.id || "new", { quote, same, dirty });
       setQuote(target.quote);
       setSame(target.same);
+      setDirty(target.dirty || false);
       setView("editor");
       setError("");
     } catch (error) {
       if (requestId === editorRequest.current) setError(error.message);
     } finally {
       if (requestId === editorRequest.current) setQuoteLoading(false);
+    }
+  }
+  async function approve(target) {
+    if (target.id === quote.id && dirty) {
+      setError("Save your changes before approving this quotation.");
+      return;
+    }
+    setBusy(true);
+    setError("");
+    try {
+      const approved = await api(`/quotations/${target.id}/approve`, {
+        method: "POST",
+        body: JSON.stringify({ revision: target.revision }),
+      });
+      if (approved.id === quote.id) {
+        setQuote(approved);
+        setDirty(false);
+      }
+      editorDrafts.current.delete(approved.id);
+      setNotice(`${approved.number} approved`);
+      await load();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function printPreview() {
+    if (admin) {
+      window.print();
+      return;
+    }
+    try {
+      const latest = await api(`/quotations/${previewCurrent.id}/preview`);
+      if (latest.revision !== previewCurrent.revision) {
+        closePreview();
+        setError(
+          "This quotation has changed. Reopen the latest approved preview before printing.",
+        );
+        return;
+      }
+      window.print();
+    } catch (e) {
+      closePreview();
+      setError(e.message);
     }
   }
   return (
@@ -227,9 +320,43 @@ export default function App() {
         <header className="page-heading">
           <h1>
             <FileText size={28} strokeWidth={1.8} />
-            {view === "editor" ? "Sales Quotation" : "Quotation Dashboard"}
+            {
+              {
+                editor: "Sales Quotation",
+                list: "Quotation Dashboard",
+                requests: "Approval Requests",
+                users: "User Management",
+              }[view]
+            }
           </h1>
           <div className="heading-actions">
+            {admin && (
+              <>
+                <button
+                  className="button"
+                  onClick={() => {
+                    setView("requests");
+                    load();
+                  }}
+                  aria-label={`Approval requests (${requests.length})`}
+                >
+                  <Bell size={18} />
+                  <span className="notification-count">{requests.length}</span>
+                </button>
+                <button className="button" onClick={() => setView("users")}>
+                  <Users size={18} />
+                  Accounts
+                </button>
+              </>
+            )}
+            <div className="session-actions">
+              <span>
+                {user?.name} · {admin ? "Admin" : "User"}
+              </span>
+              <button className="button" onClick={onLogout}>
+                Sign out
+              </button>
+            </div>
             {view === "editor" && (
               <div
                 className="quotation-record-navigation"
@@ -275,7 +402,16 @@ export default function App() {
             </button>
             {view === "editor" && (
               <>
-                <button className="button" onClick={showPreview}>
+                <button
+                  className="button"
+                  onClick={showPreview}
+                  disabled={!canPreview || quoteLoading}
+                  title={
+                    !canPreview
+                      ? "Available after administrator approval. Save any changes and request approval again."
+                      : "Preview quotation"
+                  }
+                >
                   <Eye size={18} />
                   Preview
                 </button>
@@ -286,7 +422,11 @@ export default function App() {
                   disabled={busy || quoteLoading}
                 >
                   <Save size={18} />
-                  {busy ? "Saving…" : "Save Quotation"}
+                  {busy
+                    ? "Saving…"
+                    : admin
+                      ? "Save Quotation"
+                      : "Submit for Approval"}
                 </button>
               </>
             )}
@@ -300,7 +440,64 @@ export default function App() {
             </button>
           </div>
         )}
-        {view === "editor" ? (
+        {view === "editor" && (
+          <div className="workflow-banner">
+            <span
+              className={`workflow-status ${!dirty && quote.status === "approved" ? "approved" : ""}`}
+            >
+              {dirty
+                ? "Unsaved changes"
+                : quote.status === "approved"
+                  ? "Approved"
+                  : quote.id
+                    ? "Pending approval"
+                    : "New quotation"}
+            </span>
+            <p>
+              {admin
+                ? "Review the details, save any changes, then approve the quotation."
+                : "Preview and PDF are available after approval. Saved changes require approval again."}
+            </p>
+            {quote.id && (
+              <button
+                type="button"
+                className="button"
+                disabled={busy || quoteLoading}
+                onClick={() => {
+                  if (
+                    !dirty ||
+                    window.confirm(
+                      "Discard unsaved changes and reload this quotation?",
+                    )
+                  )
+                    open(quote.id, true);
+                }}
+              >
+                Reload saved quotation
+              </button>
+            )}
+            {admin && quote.id && quote.status !== "approved" && (
+              <button
+                type="button"
+                className="button primary"
+                disabled={dirty || busy}
+                onClick={() => approve(quote)}
+              >
+                Approve quotation
+              </button>
+            )}
+          </div>
+        )}
+        {view === "requests" && admin ? (
+          <ApprovalRequests
+            requests={requests}
+            open={open}
+            approve={approve}
+            busy={busy}
+          />
+        ) : view === "users" && admin ? (
+          <UserManagement />
+        ) : view === "editor" ? (
           <form id="quotation-form" onSubmit={save}>
             <CollapsibleSection
               className="quote-information"
@@ -364,6 +561,7 @@ export default function App() {
                       type="checkbox"
                       checked={same}
                       onChange={(event) => {
+                        setDirty(true);
                         if (!event.target.checked)
                           update("shipTo", { ...current.shipTo });
                         setSame(event.target.checked);
@@ -409,6 +607,7 @@ export default function App() {
       {preview && (
         <QuotationPreview
           q={previewCurrent}
+          onPrint={printPreview}
           sum={totals(previewCurrent)}
           onClose={closePreview}
           onPrevious={() => navigatePreview(previousId)}
@@ -419,7 +618,7 @@ export default function App() {
           navigationError={previewError}
           positionLabel={
             previewIndex >= 0
-              ? `${previewIndex + 1} of ${orderedQuotes.length}`
+              ? `${previewIndex + 1} of ${previewQuotes.length}`
               : "Current draft"
           }
         />

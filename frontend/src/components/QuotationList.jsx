@@ -51,6 +51,7 @@ export default function QuotationList({
                 <th>DATE</th>
                 <th>QUOTE VALIDITY</th>
                 <th className="align-right">AMOUNT</th>
+                <th>STATUS</th>
                 <th />
               </tr>
             </thead>
@@ -82,6 +83,15 @@ export default function QuotationList({
                         : "—"}
                     </td>
                     <td className="align-right">{currency(v.total)}</td>
+                    <td>
+                      <span
+                        className={`workflow-status ${v.status === "approved" ? "approved" : ""}`}
+                      >
+                        {v.status === "approved"
+                          ? "Approved"
+                          : "Pending approval"}
+                      </span>
+                    </td>
                     <td>
                       <button
                         className="icon-button"

@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from functools import lru_cache
 
 from flask import current_app
-from sqlalchemy import Column, Integer, MetaData, Numeric, String, Table, Text, create_engine, func, select, text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, MetaData, Numeric, String, Table, Text, create_engine, func, select, text
 from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.engine import URL
 
@@ -16,6 +16,46 @@ quotations = Table(
     Column('total', Numeric(18, 2), nullable=False),
     Column('payload', LONGTEXT(), nullable=False),
     mysql_engine='InnoDB', mysql_charset='utf8mb4', mysql_collate='utf8mb4_unicode_ci',
+)
+
+users = Table(
+    'users', metadata,
+    Column('id', Integer, primary_key=True, autoincrement=True),
+    Column('username', String(80), nullable=False, unique=True),
+    Column('name', String(120), nullable=False),
+    Column('password_hash', String(255), nullable=False),
+    Column('role', String(16), nullable=False),
+    Column('active', Boolean, nullable=False, default=True),
+    mysql_engine='InnoDB', mysql_charset='utf8mb4', mysql_collate='utf8mb4_unicode_ci',
+)
+
+auth_sessions = Table(
+    'auth_sessions', metadata,
+    Column('token_hash', String(64), primary_key=True),
+    Column('user_id', Integer, ForeignKey('users.id'), nullable=False, index=True),
+    Column('csrf', String(64), nullable=False),
+    Column('expires_at', DateTime, nullable=False),
+    mysql_engine='InnoDB',
+)
+
+quotation_reviews = Table(
+    'quotation_reviews', metadata,
+    Column('quote_id', Integer, ForeignKey('quotations.id'), primary_key=True),
+    Column('owner_id', Integer, ForeignKey('users.id'), nullable=True, index=True),
+    Column('status', String(16), nullable=False, default='pending', index=True),
+    Column('revision', Integer, nullable=False, default=1),
+    Column('submitted_at', DateTime, nullable=False),
+    Column('approved_by', Integer, ForeignKey('users.id'), nullable=True),
+    Column('approved_at', DateTime, nullable=True),
+    mysql_engine='InnoDB',
+)
+
+login_limits = Table(
+    'login_limits', metadata,
+    Column('key', String(64), primary_key=True),
+    Column('attempts', Integer, nullable=False),
+    Column('started_at', DateTime, nullable=False),
+    mysql_engine='InnoDB',
 )
 
 

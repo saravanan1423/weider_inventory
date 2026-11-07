@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import SidebarDemo from "./components/sidebar-demo";
+import AuthGate from "./components/AuthGate";
 import "./tailwind.css";
 import "./styles.css";
 import "./components/QuotationPreview.css";
@@ -15,6 +16,19 @@ document.documentElement.classList.toggle(
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {isSidebarDemo ? <SidebarDemo /> : <App />}
+    {isSidebarDemo ? (
+      <SidebarDemo />
+    ) : (
+      <AuthGate>
+        {(user, userCanPrintApproved, onLogout) => (
+          <App
+            key={user.id}
+            user={user}
+            userCanPrintApproved={userCanPrintApproved}
+            onLogout={onLogout}
+          />
+        )}
+      </AuthGate>
+    )}
   </React.StrictMode>,
 );
